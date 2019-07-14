@@ -1,4 +1,5 @@
 {
+  "host": "0.0.0.0",
   "port": "8000",
   "dataSource": "http://tgt.bot.nu/vpkdata/%b%ylog.txt",
   "averageSamples": "5"

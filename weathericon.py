@@ -9,6 +9,7 @@ SETTINGS_FILE_PATH = 'wi_settings.json'
 THRESHOLDS_FILE_PATH = 'radiation_threshold_images.json'
 ERROR_IMAGE_FILE_PATH = 'img/error.png'
 
+KEY_HOST = 'host'
 KEY_PORT = 'port'
 KEY_DATA_SOURCE = 'dataSource'
 KEY_AVERAGE_SAMPLES = 'averageSamples'
@@ -43,14 +44,18 @@ def calculate_average_over_n(n):
 				ratio_sum += calculate_ratio_from_line(line)
 			return ratio_sum/n
 		except IOError:
-			return 0.0
+			return -1.0
 	else:
-		return 0.0
+		return -1.0
 
 
 def calculate_ratio_from_line(line):
 	values = line.split(DATA_VALUE_SEPARATOR)
-	return float(values[DATA_INDEX_MEASURED_RADIATION])/float(values[DATA_INDEX_MAX_RADIATION])
+	measurement = float(values[DATA_INDEX_MEASURED_RADIATION])
+	maximum = float(values[DATA_INDEX_MAX_RADIATION])
+	if maximum == 0:
+		return 0.0
+	return measurement/maximum
 
 
 def get_image_for_ratio(ratio):
@@ -82,10 +87,10 @@ def get_radiation_threshold_images():
 	with open(THRESHOLDS_FILE_PATH) as thresholds_file:
 		threshold_ratio_images = json.load(thresholds_file)
 		radiation_threshold_images = [(float(tr), threshold_ratio_images[tr]) for tr in threshold_ratio_images]
-		radiation_threshold_images.append((0.0, ERROR_IMAGE_FILE_PATH))
+		radiation_threshold_images.append((-1.0, ERROR_IMAGE_FILE_PATH))
 		radiation_threshold_images.sort(reverse=True)
 		return radiation_threshold_images
 
 
 debug(True)
-run(host='0.0.0.0', port=get_settings()[KEY_PORT])
+run(host=get_settings()[KEY_HOST], port=get_settings()[KEY_PORT])

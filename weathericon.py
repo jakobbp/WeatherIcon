@@ -6,24 +6,16 @@ from urllib import request
 from bottle import route, run, debug, static_file
 
 SETTINGS_FILE_PATH = 'wi_settings.json'
-THRESHOLDS_FILE_PATH = 'radiation_thresholds.json'
+THRESHOLDS_FILE_PATH = 'radiation_threshold_images.json'
+ERROR_IMAGE_FILE_PATH = 'img/error.png'
 
 KEY_PORT = 'port'
 KEY_DATA_SOURCE = 'dataSource'
 KEY_AVERAGE_SAMPLES = 'averageSamples'
-KEY_ERROR_TYPE = 'ERROR'
 
 DATA_VALUE_SEPARATOR = ','
 DATA_INDEX_MEASURED_RADIATION = 18
 DATA_INDEX_MAX_RADIATION = 22
-
-WEATHER_IMAGE_MAPPING = {
-	KEY_ERROR_TYPE:     'img/error.png',
-	'OVERCAST':         'img/overcast.png',
-	'CLOUDY':           'img/cloudy.png',
-	'SUNNY_TO_CLOUDY':  'img/sunny_to_cloudy.png',
-	'SUNNY':            'img/sunny.png'
-}
 
 
 @route('/current')
@@ -62,11 +54,11 @@ def calculate_ratio_from_line(line):
 
 
 def get_image_for_ratio(ratio):
-	radiation_thresholds = get_radiation_thresholds()
-	img_path = WEATHER_IMAGE_MAPPING[KEY_ERROR_TYPE]
-	for rt in radiation_thresholds:
+	radiation_threshold_images = get_radiation_threshold_images()
+	img_path = radiation_threshold_images[-1][1]
+	for rt in radiation_threshold_images:
 		if ratio <= rt[0]:
-			img_path = WEATHER_IMAGE_MAPPING[rt[1]]
+			img_path = rt[1]
 	return img_path
 
 
@@ -86,13 +78,13 @@ def get_settings():
 		return json.load(settings_file)
 
 
-def get_radiation_thresholds():
+def get_radiation_threshold_images():
 	with open(THRESHOLDS_FILE_PATH) as thresholds_file:
-		threshold_ratios = json.load(thresholds_file)
-		radiation_thresholds = [(float(threshold_ratios[tr]), tr) for tr in threshold_ratios]
-		radiation_thresholds.append((0.0, KEY_ERROR_TYPE))
-		radiation_thresholds.sort(reverse=True)
-		return radiation_thresholds
+		threshold_ratio_images = json.load(thresholds_file)
+		radiation_threshold_images = [(float(tr), threshold_ratio_images[tr]) for tr in threshold_ratio_images]
+		radiation_threshold_images.append((0.0, ERROR_IMAGE_FILE_PATH))
+		radiation_threshold_images.sort(reverse=True)
+		return radiation_threshold_images
 
 
 debug(True)

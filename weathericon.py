@@ -6,33 +6,37 @@ from urllib import request
 from bottle import route, run, debug, static_file
 
 SETTINGS_FILE_PATH = 'wi_settings.json'
+THRESHOLDS_FILE_PATH = 'radiation_thresholds.json'
 
 KEY_PORT = 'port'
 KEY_DATA_SOURCE = 'dataSource'
 KEY_AVERAGE_SAMPLES = 'averageSamples'
+KEY_ERROR_TYPE = 'ERROR'
 
 DATA_VALUE_SEPARATOR = ','
 DATA_INDEX_MEASURED_RADIATION = 18
 DATA_INDEX_MAX_RADIATION = 22
 
-IMG_TO_RATIO_MAPPING = [
-	(0.0, 'img/error.png'),
-	(0.5, 'img/overcast.png'),
-	(0.7, 'img/cloudy.png'),
-	(0.9, 'img/sunny_to_cloudy.png'),
-	(2.0, 'img/sunny.png')
-]
+WEATHER_IMAGE_MAPPING = {
+	KEY_ERROR_TYPE:     'img/error.png',
+	'OVERCAST':         'img/overcast.png',
+	'CLOUDY':           'img/cloudy.png',
+	'SUNNY_TO_CLOUDY':  'img/sunny_to_cloudy.png',
+	'SUNNY':            'img/sunny.png'
+}
 
 
 @route('/current')
 def current_reading():
 	single_value = calculate_average_over_n(1)
+	print("Current ratio value: {}".format(single_value))
 	return static_file(filename=get_image_for_ratio(single_value), root='.')
 
 
 @route('/average')
 def average_reading():
 	average_value = calculate_average_over_n(int(get_settings()[KEY_AVERAGE_SAMPLES]))
+	print("Average ratio value: {}".format(average_value))
 	return static_file(filename=get_image_for_ratio(average_value), root='.')
 
 
@@ -58,11 +62,11 @@ def calculate_ratio_from_line(line):
 
 
 def get_image_for_ratio(ratio):
-	IMG_TO_RATIO_MAPPING.sort()
-	img_path = IMG_TO_RATIO_MAPPING[0][1]
-	for img_mapping in IMG_TO_RATIO_MAPPING:
-		if ratio <= img_mapping[0]:
-			img_path = img_mapping[1]
+	radiation_thresholds = get_radiation_thresholds()
+	img_path = WEATHER_IMAGE_MAPPING[KEY_ERROR_TYPE]
+	for rt in radiation_thresholds:
+		if ratio <= rt[0]:
+			img_path = WEATHER_IMAGE_MAPPING[rt[1]]
 	return img_path
 
 
@@ -80,6 +84,15 @@ def get_data_source():
 def get_settings():
 	with open(SETTINGS_FILE_PATH) as settings_file:
 		return json.load(settings_file)
+
+
+def get_radiation_thresholds():
+	with open(THRESHOLDS_FILE_PATH) as thresholds_file:
+		threshold_ratios = json.load(thresholds_file)
+		radiation_thresholds = [(float(threshold_ratios[tr]), tr) for tr in threshold_ratios]
+		radiation_thresholds.append((0.0, KEY_ERROR_TYPE))
+		radiation_thresholds.sort(reverse=True)
+		return radiation_thresholds
 
 
 debug(True)

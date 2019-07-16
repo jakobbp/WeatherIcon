@@ -30,7 +30,7 @@ Behaviour, calculations and results of the service can be customized through the
  - `averageSamples`: The number of last log data entries to use when calculating the average solar radiation.
 
 `radiation_threshold_images.json` contains mapping between image resources solar radiation ratio values.
-```json
+```bash
 {
   "[ratio]": "[relative resource path]",
   ...

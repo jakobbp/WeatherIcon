@@ -4,6 +4,7 @@ import datetime
 import json
 from urllib import request
 from bottle import route, run, debug, static_file
+from meinheld  import server
 
 SETTINGS_FILE_PATH = 'wi_settings.json'
 THRESHOLDS_FILE_PATH = 'radiation_threshold_images.json'
@@ -93,4 +94,4 @@ def get_radiation_threshold_images():
 
 
 debug(True)
-run(host=get_settings()[KEY_HOST], port=get_settings()[KEY_PORT])
+run(server='meinheld',host=get_settings()[KEY_HOST], port=get_settings()[KEY_PORT])
